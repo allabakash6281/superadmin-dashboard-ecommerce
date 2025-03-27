@@ -35,3 +35,20 @@ export const updateTopProducts = (currentData: typeof initialTopProducts) => {
     sales: Math.max(500, item.sales + Math.floor(Math.random() * 50) - 25)
   }));
 };
+
+// Generic update function that can work with any data shape
+export const createGenericUpdater = <T extends Record<string, any>>(
+  fieldToUpdate: keyof T, 
+  minValue: number = 0,
+  maxChange: number = 10
+) => {
+  return (items: T[]): T[] => {
+    return items.map(item => ({
+      ...item,
+      [fieldToUpdate]: Math.max(
+        minValue, 
+        Number(item[fieldToUpdate]) + Math.floor(Math.random() * maxChange) - (maxChange / 2)
+      )
+    }));
+  };
+};
