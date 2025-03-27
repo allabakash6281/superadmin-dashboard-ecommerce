@@ -1,11 +1,14 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Badge } from '@/components/ui/badge';
+import { useRealTimeData } from '@/hooks/useRealTimeData';
+import { Loader2 } from 'lucide-react';
 
 // Sales by category data
-const salesByCategory = [
+const initialSalesByCategory = [
   { name: 'Electronics', value: 42 },
   { name: 'Apparel', value: 28 },
   { name: 'Home Goods', value: 15 },
@@ -16,7 +19,7 @@ const salesByCategory = [
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD'];
 
 // Sales over time data
-const salesOverTime = [
+const initialSalesOverTime = [
   { name: 'Jan', sales: 4000 },
   { name: 'Feb', sales: 3000 },
   { name: 'Mar', sales: 5000 },
@@ -32,7 +35,7 @@ const salesOverTime = [
 ];
 
 // Customer acquisition data
-const customerAcquisition = [
+const initialCustomerAcquisition = [
   { name: 'Organic Search', new: 400, returning: 240 },
   { name: 'Direct', new: 300, returning: 198 },
   { name: 'Social Media', new: 520, returning: 380 },
@@ -41,7 +44,7 @@ const customerAcquisition = [
 ];
 
 // Top products data
-const topProducts = [
+const initialTopProducts = [
   { name: 'Premium Wireless Headphones', sales: 1245 },
   { name: 'Smartwatch Pro', sales: 1190 },
   { name: 'Bluetooth Speaker', sales: 950 },
@@ -49,6 +52,37 @@ const topProducts = [
   { name: 'Phone Case', sales: 750 },
 ];
 
+// Random update functions to simulate real-time data
+const updateSalesByCategory = (currentData: typeof initialSalesByCategory) => {
+  return currentData.map(item => ({
+    ...item,
+    value: Math.max(1, item.value + Math.floor(Math.random() * 5) - 2)
+  }));
+};
+
+const updateSalesOverTime = (currentData: typeof initialSalesOverTime) => {
+  return currentData.map(item => ({
+    ...item,
+    sales: Math.max(1000, item.sales + Math.floor(Math.random() * 500) - 250)
+  }));
+};
+
+const updateCustomerAcquisition = (currentData: typeof initialCustomerAcquisition) => {
+  return currentData.map(item => ({
+    ...item,
+    new: Math.max(100, item.new + Math.floor(Math.random() * 50) - 25),
+    returning: Math.max(100, item.returning + Math.floor(Math.random() * 50) - 25)
+  }));
+};
+
+const updateTopProducts = (currentData: typeof initialTopProducts) => {
+  return currentData.map(item => ({
+    ...item,
+    sales: Math.max(500, item.sales + Math.floor(Math.random() * 50) - 25)
+  }));
+};
+
+// Custom tooltip components
 const CustomPieTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -106,11 +140,73 @@ const CustomStackedBarTooltip = ({ active, payload, label }: any) => {
 };
 
 const Analytics = () => {
+  const [realTimeEnabled, setRealTimeEnabled] = useState(true);
+  
+  // Use the real-time data hook for each dataset
+  const { 
+    data: salesByCategory, 
+    isLoading: salesByCategoryLoading,
+    lastUpdated: salesByCategoryUpdated
+  } = useRealTimeData(
+    initialSalesByCategory,
+    realTimeEnabled ? updateSalesByCategory : data => data,
+    { interval: 8000, enableToasts: false }
+  );
+  
+  const { 
+    data: salesOverTime, 
+    isLoading: salesOverTimeLoading,
+    lastUpdated: salesOverTimeUpdated
+  } = useRealTimeData(
+    initialSalesOverTime,
+    realTimeEnabled ? updateSalesOverTime : data => data,
+    { interval: 10000, enableToasts: false }
+  );
+  
+  const { 
+    data: customerAcquisition, 
+    isLoading: customerAcquisitionLoading,
+    lastUpdated: customerAcquisitionUpdated
+  } = useRealTimeData(
+    initialCustomerAcquisition,
+    realTimeEnabled ? updateCustomerAcquisition : data => data,
+    { interval: 12000, enableToasts: false }
+  );
+  
+  const { 
+    data: topProducts, 
+    isLoading: topProductsLoading,
+    lastUpdated: topProductsUpdated
+  } = useRealTimeData(
+    initialTopProducts,
+    realTimeEnabled ? updateTopProducts : data => data,
+    { interval: 9000, enableToasts: false }
+  );
+
   return (
     <div className="space-y-6 animate-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-        <p className="text-muted-foreground">Comprehensive insights for your e-commerce business.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <p className="text-muted-foreground">Comprehensive insights for your e-commerce business.</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center">
+            <div className="mr-2">
+              <span className={`relative flex h-3 w-3 ${realTimeEnabled ? 'opacity-100' : 'opacity-50'}`}>
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${realTimeEnabled ? 'bg-green-400' : 'bg-gray-400'} opacity-75`}></span>
+                <span className={`relative inline-flex rounded-full h-3 w-3 ${realTimeEnabled ? 'bg-green-500' : 'bg-gray-500'}`}></span>
+              </span>
+            </div>
+            <Badge 
+              variant={realTimeEnabled ? "default" : "outline"} 
+              onClick={() => setRealTimeEnabled(!realTimeEnabled)}
+              className="cursor-pointer"
+            >
+              {realTimeEnabled ? "Real-time: On" : "Real-time: Off"}
+            </Badge>
+          </div>
+        </div>
       </div>
       
       <Tabs defaultValue="sales">
@@ -122,10 +218,22 @@ const Analytics = () => {
         
         <TabsContent value="sales" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="animate-in-up [animation-delay:100ms]">
+            <Card className="animate-in-up [animation-delay:100ms] relative">
+              {salesOverTimeLoading && (
+                <div className="absolute top-3 right-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
               <CardHeader>
                 <CardTitle>Sales Over Time</CardTitle>
-                <CardDescription>Monthly sales for the past year</CardDescription>
+                <CardDescription>
+                  Monthly sales for the past year
+                  {salesOverTimeUpdated && (
+                    <span className="text-xs text-muted-foreground ml-1">
+                      (Updated: {salesOverTimeUpdated.toLocaleTimeString()})
+                    </span>
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -159,10 +267,22 @@ const Analytics = () => {
               </CardContent>
             </Card>
             
-            <Card className="animate-in-up [animation-delay:200ms]">
+            <Card className="animate-in-up [animation-delay:200ms] relative">
+              {salesByCategoryLoading && (
+                <div className="absolute top-3 right-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
               <CardHeader>
                 <CardTitle>Sales by Category</CardTitle>
-                <CardDescription>Percentage distribution across product categories</CardDescription>
+                <CardDescription>
+                  Percentage distribution across product categories
+                  {salesByCategoryUpdated && (
+                    <span className="text-xs text-muted-foreground ml-1">
+                      (Updated: {salesByCategoryUpdated.toLocaleTimeString()})
+                    </span>
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -194,10 +314,22 @@ const Analytics = () => {
         </TabsContent>
         
         <TabsContent value="customers" className="space-y-6">
-          <Card className="animate-in-up [animation-delay:100ms]">
+          <Card className="animate-in-up [animation-delay:100ms] relative">
+            {customerAcquisitionLoading && (
+              <div className="absolute top-3 right-3">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
             <CardHeader>
               <CardTitle>Customer Acquisition Channels</CardTitle>
-              <CardDescription>New vs. returning customers by channel</CardDescription>
+              <CardDescription>
+                New vs. returning customers by channel
+                {customerAcquisitionUpdated && (
+                  <span className="text-xs text-muted-foreground ml-1">
+                    (Updated: {customerAcquisitionUpdated.toLocaleTimeString()})
+                  </span>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -244,10 +376,22 @@ const Analytics = () => {
         </TabsContent>
         
         <TabsContent value="products" className="space-y-6">
-          <Card className="animate-in-up [animation-delay:100ms]">
+          <Card className="animate-in-up [animation-delay:100ms] relative">
+            {topProductsLoading && (
+              <div className="absolute top-3 right-3">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
             <CardHeader>
               <CardTitle>Top Selling Products</CardTitle>
-              <CardDescription>Products with the highest sales volume</CardDescription>
+              <CardDescription>
+                Products with the highest sales volume
+                {topProductsUpdated && (
+                  <span className="text-xs text-muted-foreground ml-1">
+                    (Updated: {topProductsUpdated.toLocaleTimeString()})
+                  </span>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
