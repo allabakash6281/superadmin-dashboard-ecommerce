@@ -2,6 +2,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import { 
   LayoutDashboard, 
   Package, 
@@ -52,6 +53,8 @@ const NavItem = ({ to, icon: Icon, label, collapsed }: NavItemProps) => {
 };
 
 const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
+  const { logout } = useAuth();
+
   return (
     <aside
       className={cn(
@@ -83,10 +86,13 @@ const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
 
       <div className="px-3 py-4 border-t border-sidebar-border mt-auto">
         <NavItem to="/settings" icon={Settings} label="Settings" collapsed={collapsed} />
-        <button className={cn(
-          "flex items-center gap-3 px-3 py-2 w-full rounded-md transition-all duration-200 text-sidebar-foreground/80 hover:bg-destructive/10 hover:text-destructive group",
-          collapsed ? "justify-center" : ""
-        )}>
+        <button 
+          onClick={logout}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 w-full rounded-md transition-all duration-200 text-sidebar-foreground/80 hover:bg-destructive/10 hover:text-destructive group",
+            collapsed ? "justify-center" : ""
+          )}
+        >
           <LogOut className="h-5 w-5 shrink-0" />
           {!collapsed && <span className="animate-in-right">Log Out</span>}
           {collapsed && (
